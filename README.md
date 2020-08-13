@@ -8,7 +8,7 @@ Two systems are supported:
 
 
 
-Fp
+`data Fp`
 --------------------
 ```haskell
 data Fp = Fp {fVect :: [Int], fPlace :: Int}
@@ -44,8 +44,9 @@ Extracts value at place value `n`, where the fractional separator is 0.
 ### prettify
 ```haskell
 prettify :: Integral a => [a] -> Fp
+prettify xs
 ```
-Convert a list of integrals to an Fp, allowing use of the Num and Show instances
+Convert a list of integrals `xs` to an Fp, allowing use of the Num and Show instances
 
 ### Instances
 #### `Num Fp`
@@ -73,7 +74,10 @@ to truncate.
 
 The character 'r' is interpreted specially: characters after it are assumed to repeat
 ad infinitum, as in an infinite decimal expansion.
-
+```haskell
+read ".r10" :: Fp
+--the infinite expansion .1010101010...
+```
 
 
 `class IntegralBase`
@@ -86,16 +90,16 @@ The minimal definition only includes convertI.
 
 ### convertI
 ```haskell
-	convertI :: (IntegralBase a) => a -> [b]
-	convertI base
+convertI :: (IntegralBase a) => a -> [b]
+convertI base
 ```
 Standard conversion to obtain the place values from the `base`.
 
 
 ### tobasei
 ```haskell
-	tobasei :: (IntegralBase a, Integral b) => a -> b -> [b]
-	tobasei base x
+tobasei :: (IntegralBase a, Integral b) => a -> b -> [b]
+tobasei base x
 ```
 Converts the integral value `x` to a list of integrals in positional notation.
 Note that the first index of the return value is the most significant digit.
@@ -104,16 +108,16 @@ Default implementation is greedy, based on the euclidean algorithm wrt place val
 
 ### tobasei
 ```haskell
-	frombasei :: (IntegralBase a, Integral b) => a -> [b] -> b
-	frombasei base xs
+frombasei :: (IntegralBase a, Integral b) => a -> [b] -> b
+frombasei base xs
 ```
 Interprets the list `xs` as a number in the `base`'s positional notation.
 The first index of `xs` is interpreted as the most significant digit.
 
 ### times
 ```haskell
-	times :: (IntegralBase a, Integral b) => a -> b -> b -> b
-	times base x y
+times :: (IntegralBase a, Integral b) => a -> b -> b -> b
+times base x y
 ```
 Convert `x` and `y` to greedy representation in `base`, multiply by convolving,
 and convert the result back.
@@ -121,8 +125,8 @@ and convert the result back.
 
 ### deficient
 ```haskell
-	times :: (IntegralBase a, Integral b) => a -> b -> b -> b
-	deficient base x y
+times :: (IntegralBase a, Integral b) => a -> b -> b -> b
+deficient base x y
 ```
 Convert `x` and `y` to greedy representation in `base`, multiply by convolving,
 then subtract the correct product out.
@@ -137,14 +141,14 @@ The minimal definition only includes convertF, the standard ratio.
 
 ### convertF
 ```haskell
-  convertF  :: FractionalBase a => a -> Double
+convertF  :: FractionalBase a => a -> Double
 ```
 Standard conversion to obtain the common ratio of the base.
 
 
 ### roundingF
 ```haskell
-  roundingF :: FractionalBase a => a -> Double
+roundingF :: FractionalBase a => a -> Double
 ```
 Standard rounding to be used for this instance. Defaults to `\_ -> 1e-10`
 
