@@ -1,7 +1,31 @@
 --module for positional notation conversions, where the
 --place values are either an integer sequence or a real number
 {-# LANGUAGE FlexibleInstances #-}
-module Math.GenBase.Base where
+module Math.GenBase.Base (
+    Fp (..),
+    integ,
+    frac,
+    plVal,
+    prettify,
+    zipAdd,
+    showTrunc,
+    times,
+    deficient,
+
+    IntegralBase,
+    convertI,
+    tobasei,
+    frombasei,
+    seqcount,
+    
+    FractionalBase,
+    convertF,
+    roundingF,
+    tobasef,
+    frombasef,
+    roundintf
+  )
+  where
 
 import Prelude
 import Control.Monad (guard)
@@ -87,21 +111,21 @@ class IntegralBase a where
   convertI :: Integral b => a -> [b]
   {-# MINIMAL convertI #-}
 
-  frombasei :: Integral b => a -> [b] -> b
+  frombasei :: Integral b => a -> [Int] -> b
   frombasei = frombasei' convertI
-  tobasei :: Integral b => a -> b -> [b]
+  tobasei :: Integral b => a -> b -> [Int]
   tobasei = tobasei' convertI
 
-  frombasei' :: Integral b => (a -> [b]) -> a -> [b] -> b
-  frombasei' f s = sum . zipWith (*) s' . reverse
+  frombasei' :: Integral b => (a -> [b]) -> a -> [Int] -> b
+  frombasei' f s = sum . zipWith (*) s' . reverse . map fromIntegral
     where s' = 1:dropWhile (<=1) (f s)
 
-  tobasei' :: Integral b => (a -> [b]) -> a -> b -> [b]
+  tobasei' :: Integral b => (a -> [b]) -> a -> b -> [Int]
   tobasei' f s = scan' <*> (reverse . euclids)
     where --constructing place values
           euclids b         = takeWhile ((<=b) . abs) $ dropWhile ((<=1) . abs) $ f s
-          scan' n []        = [n]              --allows explicit 0
-          scan' n (x:xs)    = num:scan' rem xs --generalized euclidean algorithm
+          scan' n []        = [fromIntegral n]                --allows explicit 0
+          scan' n (x:xs)    = (fromIntegral num):scan' rem xs --generalized euclidean algorithm
             where (num,rem) = quotRem n x
 
 seqcount s = map (tobasei s) [0..]
@@ -160,13 +184,12 @@ class FractionalBase a where
                    | otherwise   = Fp (generate x (-decimal)) 0
     where b           = f a
           decimal     = 1 + (floor $ logBase b x)
-          decFrac x   = let fl = floor x in (fl, x-(fromIntegral fl))
           generate x h | x < r     = if h > 0 then replicate (decimal-h) 0 else []
                        | otherwise = sep ++ next:generate (rem*int') int
             where int         = floor $ logBase b x
                   int'        = b^^int
                   sep         = replicate (h-int-1) 0
-                  (next, rem) = decFrac $ x/int'
+                  (next, rem) = properFraction $ x/int'
 
 --interpret an Fp as above, but try to find a 'close' integer
 roundintf :: (FractionalBase a, Integral b) => a -> Fp -> Maybe b
