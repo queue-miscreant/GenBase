@@ -1,7 +1,9 @@
 --module for positional notation conversions, where the
 --place values are either an integer sequence or a real number
 {-# LANGUAGE FlexibleInstances #-}
-module Base where
+module Math.GenBase.Base where
+
+import Prelude
 import Control.Monad (guard)
 
 --TODO write leading/trailing 0's ignorer
@@ -100,7 +102,7 @@ class IntegralBase a where
           euclids b         = takeWhile ((<=b) . abs) $ dropWhile ((<=1) . abs) $ f s
           scan' n []        = [n]              --allows explicit 0
           scan' n (x:xs)    = num:scan' rem xs --generalized euclidean algorithm
-            where (num,rem) = divMod n x
+            where (num,rem) = quotRem n x
 
 seqcount s = map (tobasei s) [0..]
 

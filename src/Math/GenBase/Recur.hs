@@ -1,9 +1,11 @@
 --module for extrapolating real/integral bases from linear recurrences.
 --Fractional bases are those positive roots of the characteristic polynomial
 --Integral bases are generalizations of zeckendorf expansions
-module Recur where
+module Math.GenBase.Recur where
+
+import Prelude
 import Control.Monad (guard)
-import Base
+import Math.GenBase.Base
 
 --generate approximations for the root of the polynomial f (ascending powers)
 --by newton's method
