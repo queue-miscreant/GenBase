@@ -14,16 +14,16 @@ module Math.GenBase.Base (
 
     IntegralBase,
     convertI,
-    tobasei,
-    frombasei,
+    toBaseI,
+    fromBaseI,
     seqcount,
     
     FractionalBase,
     convertF,
     roundingF,
-    tobasef,
-    frombasef,
-    roundintf
+    toBaseF,
+    fromBaseF,
+    roundInterF
   )
   where
 
@@ -111,24 +111,19 @@ class IntegralBase a where
   convertI :: Integral b => a -> [b]
   {-# MINIMAL convertI #-}
 
-  frombasei :: Integral b => a -> [Int] -> b
-  frombasei = frombasei' convertI
-  tobasei :: Integral b => a -> b -> [Int]
-  tobasei = tobasei' convertI
+  fromBaseI :: Integral b => a -> [Int] -> b
+  fromBaseI s = sum . zipWith (*) s' . reverse . map fromIntegral
+    where s' = 1:dropWhile (<=1) (convertI s)
 
-  frombasei' :: Integral b => (a -> [b]) -> a -> [Int] -> b
-  frombasei' f s = sum . zipWith (*) s' . reverse . map fromIntegral
-    where s' = 1:dropWhile (<=1) (f s)
-
-  tobasei' :: Integral b => (a -> [b]) -> a -> b -> [Int]
-  tobasei' f s = scan' <*> (reverse . euclids)
+  toBaseI :: Integral b => a -> b -> [Int]
+  toBaseI s = scan' <*> (reverse . euclids)
     where --constructing place values
-          euclids b         = takeWhile ((<=b) . abs) $ dropWhile ((<=1) . abs) $ f s
+          euclids b         = takeWhile ((<=b) . abs) $ dropWhile ((<=1) . abs) $ convertI s
           scan' n []        = [fromIntegral n]                --allows explicit 0
           scan' n (x:xs)    = (fromIntegral num):scan' rem xs --generalized euclidean algorithm
             where (num,rem) = quotRem n x
 
-seqcount s = map (tobasei s) [0..]
+seqcount s = map (toBaseI s) [0..]
 
 --integer bases
 instance IntegralBase Int where
@@ -145,8 +140,8 @@ instance IntegralBase [Integer] where
 --convert a and b to (greedy) series representation
 --multiply, then convert back
 times :: (IntegralBase a, Integral b) => a -> b -> b -> b
-times s a b = fromIntegral $ frombasei s badprod
-  where badprod = fVect . product . map (prettify . tobasei s) $ [a,b]
+times s a b = fromIntegral $ fromBaseI s badprod
+  where badprod = fVect . product . map (prettify . toBaseI s) $ [a,b]
 
 --convert a and b to (greedy) series representation, 
 --multiply them, and subtract this from the proper product
@@ -169,31 +164,30 @@ class FractionalBase a where
   roundingF _ = 1e-10
 
   --convert Fp to double using this interpretation
-  frombasef :: a -> Fp -> Double
-  frombasef a = frombasef' convertF (roundingF a) a
-  --convert Double to Fp
-  tobasef :: a -> Double -> Fp
-  tobasef a = tobasef' convertF (roundingF a) a
+  fromBaseF :: a -> Fp -> Double
+  fromBaseF a (Fp xs x) = sum $ zipWith (*) places $ map fromIntegral xs
+    where r      = roundingF a
+          b      = convertF a
+          --need to bisect rounding value to test equality down to rounding
+          places = takeWhile (>(r/2)) $ map (b^^) [x-1,x-2..]
 
-  frombasef' :: (a -> Double) -> Double -> a -> Fp -> Double
-  frombasef' f r a (Fp xs x) = sum $ zipWith (*) places $ map fromIntegral xs
-    where places = takeWhile (>r) $ map ((f a)^^) [x-1,x-2..]
-
-  tobasef' :: (a -> Double) -> Double -> a -> Double -> Fp
-  tobasef' f r a x | decimal > 0 = Fp (generate x 0) decimal
-                   | otherwise   = Fp (generate x (-decimal)) 0
-    where b           = f a
+  --convert Double to Fp naively
+  toBaseF :: a -> Double -> Fp
+  toBaseF a x | decimal > 0 = Fp (generate x 0) decimal
+              | otherwise   = Fp (generate x (-decimal)) 0
+    where r           = roundingF a
+          b           = convertF a
           decimal     = 1 + (floor $ logBase b x)
           generate x h | x < r     = if h > 0 then replicate (decimal-h) 0 else []
-                       | otherwise = sep ++ next:generate (rem*int') int
-            where int         = floor $ logBase b x
-                  int'        = b^^int
-                  sep         = replicate (h-int-1) 0
-                  (next, rem) = properFraction $ x/int'
+                       | otherwise = sep ++ next:generate (rem*int) pow
+            where pow         = floor $ logBase b x
+                  int         = b^^pow
+                  sep         = replicate (h-pow-1) 0
+                  (next, rem) = properFraction $ x/int
 
 --interpret an Fp as above, but try to find a 'close' integer
-roundintf :: (FractionalBase a, Integral b) => a -> Fp -> Maybe b
-roundintf a = close (roundingF a) . frombasef a
+roundInterF :: (FractionalBase a, Integral b) => a -> Fp -> Maybe b
+roundInterF a = close (roundingF a) . fromBaseF a
 
 --simple base
 instance FractionalBase Double where
