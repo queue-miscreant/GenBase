@@ -1,7 +1,7 @@
 --module for positional notation conversions, where the
 --place values are either an integer sequence or a real number
 {-# LANGUAGE FlexibleInstances #-}
-module Math.GenBase.Base (
+module Math.Base.Base (
     Fp (..),
     integ,
     frac,
