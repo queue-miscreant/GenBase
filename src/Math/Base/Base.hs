@@ -145,7 +145,7 @@ times s a b = fromIntegral $ fromBaseI s badprod
 
 --convert a and b to (greedy) series representation, 
 --multiply them, and subtract this from the proper product
-deficient s a b = (a `times'` b) - a*b
+deficient s a b = a*b - (a `times'` b)
   where times' = times s
 
 --safe rounding for almost-integers
@@ -164,8 +164,9 @@ class FractionalBase a where
   roundingF _ = 1e-10
 
   --convert Fp to double using this interpretation
+  --reverse added to increase floating point precision
   fromBaseF :: a -> Fp -> Double
-  fromBaseF a (Fp xs x) = sum $ zipWith (*) places $ map fromIntegral xs
+  fromBaseF a (Fp xs x) = sum $ reverse $ zipWith (*) places $ map fromIntegral xs
     where r      = roundingF a
           b      = convertF a
           --need to bisect rounding value to test equality down to rounding

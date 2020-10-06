@@ -14,7 +14,7 @@ extra-source-files:  CHANGELOG.md, README.md
 
 
 library
-  exposed-modules:     Math.GenBase.Recur, Math.GenBase.Base
+  exposed-modules:     Math.Base.Recur, Math.Base.Base
   -- other-modules:
   other-extensions:    FlexibleInstances
   build-depends:       base >=4.14 && <4.15
