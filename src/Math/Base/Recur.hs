@@ -5,7 +5,7 @@ module Math.Base.Recur where
 
 import Prelude
 import Control.Monad (guard)
-import Math.GenBase.Base
+import Math.Base.Base
 
 --generate approximations for the root of the polynomial f (ascending powers)
 --by newton's method
